@@ -91,7 +91,7 @@ void* dynarray_find(struct dynarray *arr, void *a)
     while (left <= right) {
         mid = (left + right) / 2;
 
-        ret = arr->compare_func(a, arr->ptab[mid], arr->ref);
+        ret = arr->cmp(a, arr->ptab[mid], arr->ref);
         if (0 == ret)
             return arr->ptab[mid];
 
@@ -115,4 +115,57 @@ int dynarray_exist(struct dynarray *d, int k)
     }
 
     return 0;
+}
+
+void dynarray_insert(struct dynarray *d, struct dynarray *s)
+{
+    int i;
+
+    for (i = 0; i < s->len; i++) {
+        dynarray_add(d, s->ptab[i]);
+    }
+}
+
+struct dynarray*    dynarray_new(cmp_fn cmp, free_fn free1)
+{
+    struct dynarray *d = (struct dynarray *)calloc(1, sizeof (d[0]));
+    if (!d)
+        return NULL;
+
+    d->cmp = cmp;
+    d->free1 = free1;
+
+    return d;
+}
+
+void                dynarray_delete(struct dynarray *d)
+{
+    int i;
+    if (d->free1) {
+        for (i = 0; i < d->len; i++) {
+            d->free1(d->ptab[i]);
+        }
+    }
+
+    free(d->ptab);
+    free(d);
+}
+
+int int64_cmp(void *lhs, void *rhs, void *ref)
+{
+    return (int)(*(int64_t *)lhs - *(int64_t *)rhs);
+}
+
+int64_t *int64_new(int64_t a)
+{
+    int64_t *to = (int64_t *)malloc(sizeof(to[0]));
+
+    to[0] = a;
+
+    return to;
+}
+
+void    int64_delete(int64_t *a)
+{
+    free(a);
 }
